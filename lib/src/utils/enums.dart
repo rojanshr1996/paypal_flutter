@@ -1,0 +1,1 @@
+enum PaypalEnvironment { sandbox, production }
