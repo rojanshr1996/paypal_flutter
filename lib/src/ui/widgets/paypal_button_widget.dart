@@ -2,8 +2,17 @@ import 'package:flutter/material.dart';
 
 class PayPalButtonWidget extends StatelessWidget {
   final VoidCallback? onPressed;
+  final Function(dynamic data) onSuccess;
+  final Function(dynamic data) onError;
+  final Function(dynamic data) onCanceled;
 
-  const PayPalButtonWidget({super.key, this.onPressed});
+  const PayPalButtonWidget({
+    super.key,
+    this.onPressed,
+    required this.onSuccess,
+    required this.onError,
+    required this.onCanceled,
+  });
 
   @override
   Widget build(BuildContext context) {
