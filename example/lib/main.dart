@@ -31,13 +31,41 @@ class PayPalExamplePage extends StatefulWidget {
 class _PayPalExamplePageState extends State<PayPalExamplePage> {
   final ValueNotifier<OrderDetailsResponseModel?> orderDetailsNotifier = ValueNotifier(null);
   late PaypalOrdersService _ordersService;
+  late String _clientId;
+  late String _clientSecret;
+
+  static const _orderRequest = CreateOrderRequestModel(
+    intent: 'CAPTURE',
+    paymentSource: PaymentSourceRequestModel(
+      paypal: PaypalRequestModel(
+        experienceContext: ExperienceContextRequestModel(
+          paymentMethodPreference: 'IMMEDIATE_PAYMENT_REQUIRED',
+          landingPage: 'LOGIN',
+          shippingPreference: 'NO_SHIPPING',
+          userAction: 'PAY_NOW',
+          returnUrl: 'https://example.com/success',
+          cancelUrl: 'https://example.com/cancel',
+        ),
+      ),
+    ),
+    purchaseUnits: [
+      PurchaseUnitRequestModel(
+        amount: AmountRequestModel(
+          currencyCode: 'USD',
+          value: '10.00',
+        ),
+      ),
+    ],
+  );
 
   @override
   void initState() {
     super.initState();
+    _clientId = dotenv.env['PAYPAL_CLIENT_ID']!;
+    _clientSecret = dotenv.env['PAYPAL_CLIENT_SECRET']!;
     final config = PaypalConfig(
-      clientId: dotenv.env['PAYPAL_CLIENT_ID']!,
-      clientSecret: dotenv.env['PAYPAL_CLIENT_SECRET']!,
+      clientId: _clientId,
+      clientSecret: _clientSecret,
       environment: PaypalEnvironment.sandbox,
     );
     _ordersService = PaypalOrdersService(Dio(), config);
@@ -57,6 +85,16 @@ class _PayPalExamplePageState extends State<PayPalExamplePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            PayPalButtonWidget(
+              clientId: _clientId,
+              clientSecret: _clientSecret,
+              environment: PaypalEnvironment.sandbox,
+              orderRequestData: _orderRequest,
+              onSuccess: _onPaymentSuccess,
+              onError: _onPaymentError,
+              onLoading: _onPaymentLoading,
+            ),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => _openPayPalCheckout(context),
               child: const Text('Pay with PayPal'),
@@ -95,53 +133,35 @@ class _PayPalExamplePageState extends State<PayPalExamplePage> {
   void _openPayPalCheckout(BuildContext context) {
     orderDetailsNotifier.value = null;
 
-    const orderRequest = CreateOrderRequestModel(
-      intent: 'CAPTURE',
-      paymentSource: PaymentSourceRequestModel(
-        paypal: PaypalRequestModel(
-          experienceContext: ExperienceContextRequestModel(
-            paymentMethodPreference: 'IMMEDIATE_PAYMENT_REQUIRED',
-            landingPage: 'LOGIN',
-            shippingPreference: 'NO_SHIPPING',
-            userAction: 'PAY_NOW',
-            returnUrl: 'https://example.com/success',
-            cancelUrl: 'https://example.com/cancel',
-          ),
-        ),
-      ),
-      purchaseUnits: [
-        PurchaseUnitRequestModel(
-          amount: AmountRequestModel(
-            currencyCode: 'USD',
-            value: '10.00',
-          ),
-        ),
-      ],
-    );
-
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => PaypalCheckoutPage(
-          clientId: dotenv.env['PAYPAL_CLIENT_ID']!,
-          clientSecret: dotenv.env['PAYPAL_CLIENT_SECRET']!,
+          clientId: _clientId,
+          clientSecret: _clientSecret,
           environment: PaypalEnvironment.sandbox,
-          orderRequestData: orderRequest,
-          onSuccess: (result) {
-            _fetchOrderDetails(result['orderId']);
-            _showPaymentSuccessDialog(context, result);
-          },
-          onError: (error) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Payment failed: $error')),
-            );
-          },
-          onLoading: () {
-            debugPrint('PayPal checkout loading...');
-          },
+          orderRequestData: _orderRequest,
+          onSuccess: _onPaymentSuccess,
+          onError: _onPaymentError,
+          onLoading: _onPaymentLoading,
         ),
       ),
     );
+  }
+
+  void _onPaymentSuccess(Map<String, dynamic> result) {
+    _fetchOrderDetails(result['orderId']);
+    _showPaymentSuccessDialog(context, result);
+  }
+
+  void _onPaymentError(dynamic error) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Payment failed: $error')),
+    );
+  }
+
+  void _onPaymentLoading() {
+    debugPrint('PayPal checkout loading...');
   }
 
   Future<void> _fetchOrderDetails(String? orderId) async {
