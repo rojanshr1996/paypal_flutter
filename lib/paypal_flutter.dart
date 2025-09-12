@@ -1,6 +1,8 @@
 library;
 
 export 'src/core/paypal_config.dart';
+export 'src/exceptions/paypal_exceptions.dart';
+export 'src/models/paypal_payment_success_model.dart';
 export 'src/models/request_models/create_order_request_model.dart';
 export 'src/models/response_models/create_order_response_model.dart';
 export 'src/models/response_models/order_capture_response_model.dart';

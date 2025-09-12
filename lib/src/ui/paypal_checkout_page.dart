@@ -5,13 +5,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:paypal_flutter/paypal_flutter.dart';
 
+import '../exceptions/dio_exceptions.dart';
+
+/// A PayPal checkout screen that handles the full flow:
+/// 1. Creates an order via the PayPal Orders API
+/// 2. Loads the approval link inside a WebView
+/// 3. Captures the payment once the user approves
+/// 4. Returns success or error results via callbacks
 class PaypalCheckoutPage extends StatefulWidget {
+  /// PayPal client credentials
   final String clientId;
   final String clientSecret;
+
+  /// PayPal API environment (sandbox or production)
   final PaypalEnvironment environment;
+
+  /// Order request payload (items, amount, etc.)
   final CreateOrderRequestModel orderRequestData;
-  final Function(Map<String, dynamic> result) onSuccess;
-  final Function(dynamic error) onError;
+
+  /// Callback when payment succeeds
+  final Function(PaypalPaymentSuccessModel result) onSuccess;
+
+  /// Callback when payment fails or is cancelled
+  final Function(PayPalException error) onError;
+
+  /// Callback when the checkout is initializing
   final Function() onLoading;
 
   const PaypalCheckoutPage({
@@ -30,9 +48,15 @@ class PaypalCheckoutPage extends StatefulWidget {
 }
 
 class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
+  /// Tracks loading state (API calls / WebView setup)
   final ValueNotifier<bool> isLoadingNotifier = ValueNotifier(true);
+
+  /// Holds the approval URL returned from PayPal
   final ValueNotifier<String?> checkoutUrlNotifier = ValueNotifier(null);
+
+  /// Stores the order ID for capture
   String? _orderId;
+
   late PaypalOrdersService _ordersService;
   late PaypalConfig _config;
 
@@ -41,6 +65,7 @@ class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
     super.initState();
     _config = PaypalConfig(clientId: widget.clientId, clientSecret: widget.clientSecret);
     _ordersService = PaypalOrdersService(Dio(), _config);
+
     _initializeCheckout();
   }
 
@@ -51,6 +76,7 @@ class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
     super.dispose();
   }
 
+  /// Step 1: Create a PayPal order and get the approval URL.
   Future<void> _initializeCheckout() async {
     widget.onLoading();
     try {
@@ -59,6 +85,7 @@ class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
         paypalRequestId: DateTime.now().millisecondsSinceEpoch.toString(),
       );
 
+      // Extract approval link ("approve" or "payer-action")
       final approvalLink = orderResponse.links?.firstWhere(
         (link) => link.rel == 'payer-action' || link.rel == 'approve',
       );
@@ -69,11 +96,15 @@ class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
         isLoadingNotifier.value = false;
       } else {
         isLoadingNotifier.value = false;
-        widget.onError('No approval URL found');
+        widget.onError(const PayPalPaymentException('No approval URL found'));
       }
     } catch (e) {
       isLoadingNotifier.value = false;
-      widget.onError(e);
+      if (e is DioException) {
+        widget.onError(DioExceptionHandler.handleError(e));
+      } else {
+        widget.onError(PayPalPaymentException('Payment initialization failed', originalError: e));
+      }
     }
   }
 
@@ -107,12 +138,12 @@ class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
                     clearCache: true,
                     useShouldOverrideUrlLoading: true,
                   ),
-                  shouldOverrideUrlLoading: (controller, navigationAction) async {
-                    await _handleUrlChange(navigationAction.request.url);
+                  shouldOverrideUrlLoading: (controller, action) async {
+                    await _handleUrlChange(action.request.url);
                     return NavigationActionPolicy.ALLOW;
                   },
                   onReceivedError: (controller, request, error) {
-                    widget.onError('WebView error: ${error.description}');
+                    widget.onError(PayPalPaymentException('WebView error: ${error.description}'));
                   },
                 );
               }
@@ -124,11 +155,15 @@ class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
     );
   }
 
+  /// Step 2: Handle WebView URL changes.
+  /// - Success URL → capture payment
+  /// - Cancel URL → return error
   Future<void> _handleUrlChange(WebUri? url) async {
     if (url == null) return;
     final urlString = url.toString();
     final uri = Uri.parse(urlString);
-    log("THIS IS THE URL: $uri");
+
+    log("Redirected URL: $uri");
 
     if (urlString.contains('success')) {
       final token = uri.queryParameters['token'];
@@ -136,6 +171,7 @@ class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
       log("TOKEN: $token");
       log("PAYER ID: $payerId");
 
+      // Step 3: Capture payment
       if (token != null && _orderId != null) {
         try {
           final captureResponse = await _ordersService.captureOrder(
@@ -143,22 +179,30 @@ class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
             paypalRequestId: DateTime.now().toString(),
           );
 
-          widget.onSuccess({
-            'orderId': _orderId,
-            'token': token,
-            'payerId': payerId,
-            'captureResponse': captureResponse,
-          });
+          widget.onSuccess(
+            PaypalPaymentSuccessModel(
+              orderId: _orderId,
+              token: token,
+              payerId: payerId,
+              captureResponse: captureResponse,
+            ),
+          );
         } catch (e) {
-          widget.onError(e);
+          if (e is DioException) {
+            widget.onError(DioExceptionHandler.handleError(e));
+          } else {
+            widget.onError(PayPalPaymentException('Payment capture failed', originalError: e));
+          }
         }
       } else {
-        widget.onSuccess({'token': token, 'payerId': payerId});
+        // If no capture is needed, still return success
+        widget.onSuccess(PaypalPaymentSuccessModel(token: token, payerId: payerId));
       }
 
       if (mounted) Navigator.of(context).pop();
     } else if (urlString.contains('cancel')) {
-      widget.onError('Payment cancelled by user');
+      // User cancelled
+      widget.onError(const PayPalPaymentException('Payment cancelled by user'));
       if (mounted) Navigator.of(context).pop();
     }
   }

@@ -9,7 +9,8 @@ A Flutter package that provides seamless integration with PayPal payment gateway
 - **Order Management**: Create, capture, and retrieve order details
 - **WebView Checkout**: Built-in checkout page with WebView integration
 - **Type Safety**: Strongly typed models with Freezed and JSON serialization
-- **Error Handling**: Comprehensive error handling with custom exceptions
+- **Error Handling**: Comprehensive error handling with specific PayPal exceptions
+- **Success Model**: Structured success response with PaypalPaymentSuccessModel
 - **Customizable UI**: Pre-built PayPal button widget
 
 ## Package Structure
@@ -45,14 +46,14 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  paypal_flutter: ^0.0.1
+  paypal_flutter:
+    path: ../
 ```
 
 ### Prerequisites
 
 1. PayPal Developer Account
 2. Client ID and Client Secret from PayPal Developer Dashboard
-3. Flutter SDK >=1.17.0
 
 ## Usage
 
@@ -105,11 +106,11 @@ Navigator.push(
       clientSecret: 'your_client_secret',
       environment: PaypalEnvironment.sandbox,
       orderRequestData: orderRequest,
-      onSuccess: (result) {
-        print('Payment successful: $result');
+      onSuccess: (PaypalPaymentSuccessModel result) {
+        print('Payment successful: ${result.orderId}');
       },
-      onError: (error) {
-        print('Payment failed: $error');
+      onError: (PayPalException error) {
+        print('Payment failed: ${error.message}');
       },
       onLoading: () {
         print('Loading...');
@@ -123,10 +124,17 @@ Navigator.push(
 
 ```dart
 PayPalButtonWidget(
-  onPressed: () => _openPayPalCheckout(),
-  onSuccess: (data) => print('Success: $data'),
-  onError: (error) => print('Error: $error'),
-  onCanceled: (data) => print('Canceled: $data'),
+  clientId: 'your_client_id',
+  clientSecret: 'your_client_secret',
+  environment: PaypalEnvironment.sandbox,
+  orderRequestData: orderRequest,
+  onSuccess: (PaypalPaymentSuccessModel result) {
+    print('Success: ${result.orderId}');
+  },
+  onError: (PayPalException error) {
+    print('Error: ${error.message}');
+  },
+  onLoading: () => print('Loading...'),
 )
 ```
 
@@ -158,17 +166,38 @@ final orderDetails = await ordersService.getOrderDetails(
 - **PaypalOrdersService**: Manages order creation, capture, and retrieval
 - **PaypalCheckoutPage**: Full-screen checkout with WebView integration
 - **PayPalButtonWidget**: Customizable PayPal button component
+- **PaypalPaymentSuccessModel**: Strongly typed success response model
+- **PayPal Exceptions**: Comprehensive error handling with specific exception types
 
 ## Error Handling
 
-The package includes comprehensive error handling:
+The package includes comprehensive error handling with specific PayPal exceptions:
 
 ```dart
+// In payment callbacks
+void _onPaymentError(PayPalException error) {
+  switch (error.runtimeType) {
+    case PayPalAuthenticationException:
+      print('Authentication failed: ${error.message}');
+      break;
+    case PayPalNetworkException:
+      print('Network error: ${error.message}');
+      break;
+    case PayPalPaymentException:
+      print('Payment error: ${error.message}');
+      break;
+    default:
+      print('Error: ${error.message}');
+  }
+}
+
+// In service calls
 try {
   final result = await ordersService.createOrder(...);
 } on DioException catch (e) {
-  // Handle HTTP errors
-} on PaypalException catch (e) {
+  final paypalError = DioExceptionHandler.handleError(e);
+  // Handle converted PayPal exception
+} on PayPalException catch (e) {
   // Handle PayPal-specific errors
 }
 ```

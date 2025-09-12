@@ -43,7 +43,6 @@ This example demonstrates how to integrate **PayPal Checkout** in a Flutter app 
 
 ```bash
 git clone <repo_url>
-cd paypal_flutter_example
 ```
 
 2. Install dependencies:

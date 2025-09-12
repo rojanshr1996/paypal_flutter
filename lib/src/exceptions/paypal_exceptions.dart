@@ -1,4 +1,3 @@
-// lib/src/exceptions/paypal_exceptions.dart
 abstract class PayPalException implements Exception {
   final String message;
   final dynamic originalError;
