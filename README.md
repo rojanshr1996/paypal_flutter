@@ -19,23 +19,34 @@ A Flutter package that provides seamless integration with PayPal payment gateway
 lib/
 ├── src/
 │   ├── core/
-│   │   └── paypal_config.dart          # Configuration and authentication
+│   │   └── paypal_config.dart                    # Configuration and authentication
 │   ├── exceptions/
-│   │   ├── dio_exceptions.dart         # HTTP error handling
-│   │   └── paypal_exceptions.dart      # PayPal-specific exceptions
+│   │   ├── dio_exceptions.dart                   # HTTP error handling
+│   │   └── paypal_exceptions.dart                # PayPal-specific exceptions
 │   ├── models/
-│   │   ├── request_models/             # API request models
-│   │   └── response_models/            # API response models
+│   │   ├── request_models/
+│   │   │   ├── create_order_request_model.dart   # Order creation request
+│   │   │   ├── create_order_request_model.freezed.dart
+│   │   │   └── create_order_request_model.g.dart
+│   │   ├── response_models/
+│   │   │   ├── create_order_response_model.dart  # Order creation response
+│   │   │   ├── order_capture_response_model.dart # Order capture response
+│   │   │   ├── order_details_response_model.dart # Order details response
+│   │   │   ├── paypal_auth_response_model.dart   # Authentication response
+│   │   │   └── *.freezed.dart, *.g.dart         # Generated files
+│   │   ├── paypal_payment_success_model.dart     # Success response model
+│   │   ├── paypal_payment_success_model.freezed.dart
+│   │   └── paypal_payment_success_model.g.dart
 │   ├── services/
-│   │   └── paypal_orders_service.dart  # Orders API service
+│   │   └── paypal_orders_service.dart            # Orders API service
 │   ├── ui/
 │   │   ├── widgets/
-│   │   │   └── paypal_button_widget.dart # PayPal button widget
-│   │   └── paypal_checkout_page.dart   # Checkout page with WebView
+│   │   │   └── paypal_button_widget.dart         # PayPal button widget
+│   │   └── paypal_checkout_page.dart             # Checkout page with WebView
 │   └── utils/
-│       ├── constants.dart              # API endpoints
-│       └── enums.dart                  # Environment enums
-└── paypal_flutter.dart                # Main export file
+│       ├── constants.dart                        # API endpoints
+│       └── enums.dart                            # Environment enums
+└── paypal_flutter.dart                          # Main export file
 ```
 
 ## Getting Started
@@ -166,8 +177,11 @@ final orderDetails = await ordersService.getOrderDetails(
 - **PaypalOrdersService**: Manages order creation, capture, and retrieval
 - **PaypalCheckoutPage**: Full-screen checkout with WebView integration
 - **PayPalButtonWidget**: Customizable PayPal button component
-- **PaypalPaymentSuccessModel**: Strongly typed success response model
+- **PaypalPaymentSuccessModel**: Success response with orderId, token, payerId, and captureResponse
+- **Request Models**: CreateOrderRequestModel with Freezed serialization
+- **Response Models**: CreateOrderResponseModel, OrderCaptureResponseModel, OrderDetailsResponseModel, PaypalAuthResponseModel
 - **PayPal Exceptions**: Comprehensive error handling with specific exception types
+- **PaypalEnvironment**: Enum for sandbox and production environments
 
 ## Error Handling
 

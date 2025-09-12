@@ -143,6 +143,12 @@ class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
                     return NavigationActionPolicy.ALLOW;
                   },
                   onReceivedError: (controller, request, error) {
+                    // Filter out net::ERR_FAILED which sometimes occurs due to WebView loading quirks
+                    if (error.description.contains('net::ERR_FAILED')) {
+                      debugPrint('Ignored WebView error: ${error.description}');
+                      return;
+                    }
+
                     widget.onError(PayPalPaymentException('WebView error: ${error.description}'));
                   },
                 );

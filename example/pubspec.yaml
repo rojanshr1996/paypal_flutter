@@ -10,7 +10,11 @@ dependencies:
   dio: ^5.9.0
   flutter:
     sdk: flutter
+  flutter_bloc: ^9.1.1
   flutter_dotenv: ^6.0.0
+  freezed_annotation: ^3.1.0
+  get_it: ^8.2.0
+  json_annotation: ^4.9.0
   paypal_flutter:
     path: ../
 
@@ -19,6 +23,8 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^3.0.0
   build_runner: ^2.4.15
+  json_serializable: ^6.9.5
+  freezed: ^3.0.6
 
 flutter:
   uses-material-design: true

@@ -1,12 +1,15 @@
 import 'dart:developer';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:paypal_flutter/paypal_flutter.dart';
+import 'package:paypal_flutter_example/core/service_locator.dart';
+import 'package:paypal_flutter_example/order/presentation/bloc/order_details_cubit/order_details_cubit.dart';
+import 'package:paypal_flutter_example/order/presentation/bloc/order_details_cubit/order_details_state.dart';
 
 Future<void> main() async {
-  await dotenv.load(fileName: '.env');
+  initServiceLocator();
   runApp(const MyApp());
 }
 
@@ -15,10 +18,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'PayPal Flutter Example',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const PayPalExamplePage(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => getIt<OrderDetailsCubit>()),
+      ],
+      child: MaterialApp(
+        title: 'PayPal Flutter Example',
+        theme: ThemeData(primarySwatch: Colors.blue),
+        home: const PayPalExamplePage(),
+      ),
     );
   }
 }
@@ -31,8 +39,6 @@ class PayPalExamplePage extends StatefulWidget {
 }
 
 class _PayPalExamplePageState extends State<PayPalExamplePage> {
-  final ValueNotifier<OrderDetailsResponseModel?> orderDetailsNotifier = ValueNotifier(null);
-  late PaypalOrdersService _ordersService;
   late String _clientId;
   late String _clientSecret;
 
@@ -65,17 +71,10 @@ class _PayPalExamplePageState extends State<PayPalExamplePage> {
     super.initState();
     _clientId = dotenv.env['PAYPAL_CLIENT_ID']!;
     _clientSecret = dotenv.env['PAYPAL_CLIENT_SECRET']!;
-    final config = PaypalConfig(
-      clientId: _clientId,
-      clientSecret: _clientSecret,
-      environment: PaypalEnvironment.sandbox,
-    );
-    _ordersService = PaypalOrdersService(Dio(), config);
   }
 
   @override
   void dispose() {
-    orderDetailsNotifier.dispose();
     super.dispose();
   }
 
@@ -102,28 +101,49 @@ class _PayPalExamplePageState extends State<PayPalExamplePage> {
               child: const Text('Pay with PayPal'),
             ),
             const SizedBox(height: 20),
-            ValueListenableBuilder<OrderDetailsResponseModel?>(
-              valueListenable: orderDetailsNotifier,
-              builder: (context, orderDetails, child) {
-                if (orderDetails == null) return const SizedBox.shrink();
-                return Card(
-                  margin: const EdgeInsets.all(16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('Order ID: ${orderDetails.id}'),
-                        Text('Status: ${orderDetails.status}'),
-                        Text(
-                            'Amount: ${orderDetails.purchaseUnits?.first.amount?.value} ${orderDetails.purchaseUnits?.first.amount?.currencyCode}'),
-                        if (orderDetails.payer?.emailAddress != null)
-                          Text('Payer: ${orderDetails.payer!.emailAddress}'),
-                      ],
-                    ),
-                  ),
-                );
+            BlocBuilder<OrderDetailsCubit, OrderDetailsState>(
+              builder: (context, orderDetailsState) {
+                switch (orderDetailsState) {
+                  case Loading():
+                    return const Center(child: CircularProgressIndicator());
+
+                  case Error(message: final message):
+                    return Card(
+                      margin: const EdgeInsets.all(16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          'Error: $message',
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    );
+
+                  case Success(orderDetailsData: final orderDetails):
+                    return Card(
+                      margin: const EdgeInsets.all(16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('Order ID: ${orderDetails.id}'),
+                            Text('Status: ${orderDetails.status}'),
+                            Text(
+                              'Amount: ${orderDetails.purchaseUnits?.first.amount?.value} '
+                              '${orderDetails.purchaseUnits?.first.amount?.currencyCode}',
+                            ),
+                            if (orderDetails.payer?.emailAddress != null)
+                              Text('Payer: ${orderDetails.payer!.emailAddress}'),
+                          ],
+                        ),
+                      ),
+                    );
+
+                  default:
+                    return const SizedBox.shrink();
+                }
               },
             ),
           ],
@@ -133,8 +153,6 @@ class _PayPalExamplePageState extends State<PayPalExamplePage> {
   }
 
   void _openPayPalCheckout(BuildContext context) {
-    orderDetailsNotifier.value = null;
-
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -170,15 +188,7 @@ class _PayPalExamplePageState extends State<PayPalExamplePage> {
 
   Future<void> _fetchOrderDetails(String? orderId) async {
     if (orderId == null) return;
-    try {
-      final orderDetails = await _ordersService.getOrderDetails(
-        orderId: orderId,
-        paypalRequestId: DateTime.now().toString(),
-      );
-      orderDetailsNotifier.value = orderDetails;
-    } catch (e) {
-      debugPrint('Error fetching order details: $e');
-    }
+    BlocProvider.of<OrderDetailsCubit>(context).getOrderDetails(orderId);
   }
 
   void _showPaymentSuccessDialog(BuildContext context, PaypalPaymentSuccessModel result) {

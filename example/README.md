@@ -13,6 +13,7 @@ This example demonstrates how to integrate **PayPal Checkout** in a Flutter app 
 * [App Flow](#app-flow)
 * [Flow Diagram](#flow-diagram)
 * [Code Structure](#code-structure)
+* [State Management](#state-management)
 * [Running the Example](#running-the-example)
 * [Screenshots](#screenshots)
 
@@ -34,6 +35,8 @@ This example demonstrates how to integrate **PayPal Checkout** in a Flutter app 
 * Flutter 3.0+
 * Dart 3.0+
 * A PayPal developer account with sandbox and/or live credentials
+* Knowledge of BLoC/Cubit pattern for state management
+* Understanding of clean architecture principles
 
 ---
 
@@ -73,32 +76,40 @@ The app uses [flutter\_dotenv](https://pub.dev/packages/flutter_dotenv) to load 
 
 ## App Flow
 
-1. **Initialize the PayPal Service**
+1. **Initialize Dependencies & State Management**
 
-   * The app reads your client ID and secret from `.env`.
-   * `PaypalConfig` is initialized with `sandbox` or `production` environment.
-   * `PaypalOrdersService` handles API requests.
+   * Service locator (`getIt`) initializes dependencies using clean architecture
+   * `OrderDetailsCubit` is provided via `BlocProvider` for state management
+   * The app reads PayPal credentials from `.env` file
+   * `PaypalConfig` is initialized with `sandbox` or `production` environment
 
 2. **Create an Order**
 
-   * `CreateOrderRequestModel` specifies the payment details, amount, currency, and return/cancel URLs.
-   * The app calls `PaypalOrdersService.createOrder()` to get the PayPal approval URL.
+   * `CreateOrderRequestModel` specifies payment details, amount, currency, and return/cancel URLs
+   * The app calls `PaypalOrdersService.createOrder()` to get the PayPal approval URL
 
 3. **Display Approval Page**
 
-   * The approval page is displayed in a WebView using `PaypalCheckoutPage`.
-   * User logs into PayPal and approves or cancels the payment.
+   * The approval page is displayed in a WebView using `PaypalCheckoutPage`
+   * User logs into PayPal and approves or cancels the payment
 
 4. **Capture the Payment**
 
-   * If the user approves, the app captures the payment using `PaypalOrdersService.captureOrder()`.
-   * The result is returned in `PaypalPaymentSuccessModel`.
+   * If the user approves, the app captures the payment using `PaypalOrdersService.captureOrder()`
+   * The result is returned in `PaypalPaymentSuccessModel`
 
-5. **Show Success/Error**
+5. **State Management & Order Details**
 
-   * On success, a dialog shows the order ID and token.
-   * On error or cancellation, a snackbar displays the error message.
-   * Order details can be fetched using `getOrderDetails()`.
+   * On successful payment, `OrderDetailsCubit.getOrderDetails()` is called
+   * Cubit manages three states: `Loading`, `Success`, and `Error`
+   * `BlocBuilder` listens to state changes and updates UI accordingly
+   * Order details are displayed in a card with ID, status, amount, and payer info
+
+6. **Show Success/Error**
+
+   * On success, a dialog shows the order ID and token
+   * On error or cancellation, a snackbar displays the error message
+   * Order details are fetched and displayed using Cubit state management
 
 ---
 
@@ -106,30 +117,103 @@ The app uses [flutter\_dotenv](https://pub.dev/packages/flutter_dotenv) to load 
 
 ```mermaid
 graph TD
-    A[Start Payment] --> B[Create Order via PayPal API]
-    B --> C[Get Approval URL]
-    C --> D[Display WebView for User Approval]
-    D -->|User Approves| E[Capture Order via PayPal API]
-    E --> F[Return Success Result]
-    D -->|User Cancels| G[Return Error Result]
-    F --> H[Fetch Order Details if needed]
-    H --> I[Display Order Details in UI]
+    A[App Initialization] --> B[Service Locator Setup]
+    B --> C[BlocProvider Setup]
+    C --> D[Start Payment]
+    D --> E[Create Order via PayPal API]
+    E --> F[Get Approval URL]
+    F --> G[Display WebView for User Approval]
+    G -->|User Approves| H[Capture Order via PayPal API]
+    H --> I[Return Success Result]
+    G -->|User Cancels| J[Return Error Result]
+    I --> K[OrderDetailsCubit.getOrderDetails()]
+    K --> L[Cubit Emits Loading State]
+    L --> M[Fetch Order Details API]
+    M -->|Success| N[Cubit Emits Success State]
+    M -->|Error| O[Cubit Emits Error State]
+    N --> P[BlocBuilder Updates UI]
+    O --> P
+    J --> Q[Show Error SnackBar]
 ```
 
-This diagram shows the complete flow from creating an order to capturing the payment and displaying details.
+This diagram shows the complete flow including clean architecture setup, state management with Cubit, and UI updates through BlocBuilder.
 
 ---
 
 ## Code Structure
 
-* `main.dart` – Example app entry point
-* `PayPalExamplePage` – Main UI with button to start checkout
+### Clean Architecture Layers
+
+#### Presentation Layer
+* `order/presentation/bloc/order_details_cubit/` – State management layer
+  * `order_details_cubit.dart` – Cubit for managing order details state
+  * `order_details_state.dart` – State definitions (Loading, Success, Error)
+
+#### Domain Layer
+* `order/domain/entities/` – Business entities
+* `order/domain/repositories/` – Repository interfaces
+
+#### Data Layer
+* `order/data/repositories/` – Repository implementations
+* `order/data/datasources/` – Remote and local data sources
+* `order/data/models/` – Data transfer objects
+
+#### Core
+* `core/service_locator.dart` – Dependency injection setup using GetIt
+
+### Main Application
+
+* `main.dart` – App entry point with MultiBlocProvider setup
+* `PayPalExamplePage` – Main UI with PayPal integration and BlocBuilder
+
+### PayPal Integration
+
 * `PaypalCheckoutPage` – Handles WebView flow and capturing payment
 * `PaypalOrdersService` – Service class for interacting with PayPal APIs
 * `PaypalConfig` – Holds client credentials and generates access tokens
 * `PayPalButtonWidget` – Reusable button widget to trigger PayPal checkout
+
+### Models & Exceptions
+
 * `exceptions/` – Custom exception classes
 * `models/` – Request and response models using `freezed`
+
+## State Management
+
+The example uses **Cubit** (part of the BLoC library) for state management:
+
+### OrderDetailsCubit States
+
+* `Loading` - When fetching order details from PayPal API
+* `Success(orderDetailsData)` - Contains the fetched order details
+* `Error(message)` - Contains error message if API call fails
+
+### Usage in UI
+
+```dart
+BlocBuilder<OrderDetailsCubit, OrderDetailsState>(
+  builder: (context, orderDetailsState) {
+    switch (orderDetailsState) {
+      case Loading():
+        return const CircularProgressIndicator();
+      case Success(orderDetailsData: final orderDetails):
+        return OrderDetailsCard(orderDetails);
+      case Error(message: final message):
+        return ErrorWidget(message);
+    }
+  },
+)
+```
+
+### Dependency Injection
+
+The app uses **GetIt** for dependency injection, configured in `service_locator.dart`:
+
+```dart
+void initServiceLocator() {
+  getIt.registerFactory<OrderDetailsCubit>(() => OrderDetailsCubit());
+}
+```
 
 ---
 
