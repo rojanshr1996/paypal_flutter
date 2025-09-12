@@ -2,7 +2,8 @@
 import 'package:paypal_flutter/paypal_flutter.dart';
 
 abstract class OrderRemoteDataSource {
-  Future<OrderDetailsResponseModel> fetchOrderDetails({required String orderId, required String paypalRequestId});
+  Future<OrderDetailsResponseModel> fetchOrderDetails(
+      {required String orderId, required String paypalRequestId});
 }
 
 class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {

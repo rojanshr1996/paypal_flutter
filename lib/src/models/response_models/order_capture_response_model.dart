@@ -10,19 +10,23 @@ abstract class OrderCaptureResponseModel with _$OrderCaptureResponseModel {
     String? id,
     String? status,
     @JsonKey(name: 'payment_source') PaymentSourceResponseModel? paymentSource,
-    @JsonKey(name: 'purchase_units') List<PurchaseUnitResponseModel>? purchaseUnits,
+    @JsonKey(name: 'purchase_units')
+    List<PurchaseUnitResponseModel>? purchaseUnits,
     PayerResponseModel? payer,
     List<LinkResponseModel>? links,
   }) = _OrderCaptureResponseModel;
 
-  factory OrderCaptureResponseModel.fromJson(Map<String, dynamic> json) => _$OrderCaptureResponseModelFromJson(json);
+  factory OrderCaptureResponseModel.fromJson(Map<String, dynamic> json) =>
+      _$OrderCaptureResponseModelFromJson(json);
 }
 
 @freezed
 abstract class ShippingResponseModel with _$ShippingResponseModel {
-  const factory ShippingResponseModel({AddressResponseModel? address}) = _ShippingResponseModel;
+  const factory ShippingResponseModel({AddressResponseModel? address}) =
+      _ShippingResponseModel;
 
-  factory ShippingResponseModel.fromJson(Map<String, dynamic> json) => _$ShippingResponseModelFromJson(json);
+  factory ShippingResponseModel.fromJson(Map<String, dynamic> json) =>
+      _$ShippingResponseModelFromJson(json);
 }
 
 @freezed
@@ -36,14 +40,17 @@ abstract class AddressResponseModel with _$AddressResponseModel {
     @JsonKey(name: 'country_code') String? countryCode,
   }) = _AddressResponseModel;
 
-  factory AddressResponseModel.fromJson(Map<String, dynamic> json) => _$AddressResponseModelFromJson(json);
+  factory AddressResponseModel.fromJson(Map<String, dynamic> json) =>
+      _$AddressResponseModelFromJson(json);
 }
 
 @freezed
 abstract class PaymentsResponseModel with _$PaymentsResponseModel {
-  const factory PaymentsResponseModel({List<CaptureResponseModel>? captures}) = _PaymentsResponseModel;
+  const factory PaymentsResponseModel({List<CaptureResponseModel>? captures}) =
+      _PaymentsResponseModel;
 
-  factory PaymentsResponseModel.fromJson(Map<String, dynamic> json) => _$PaymentsResponseModelFromJson(json);
+  factory PaymentsResponseModel.fromJson(Map<String, dynamic> json) =>
+      _$PaymentsResponseModelFromJson(json);
 }
 
 @freezed
@@ -52,20 +59,24 @@ abstract class CaptureResponseModel with _$CaptureResponseModel {
     String? id,
     String? status,
     AmountResponseModel? amount,
-    @JsonKey(name: 'seller_protection') SellerProtectionResponseModel? sellerProtection,
+    @JsonKey(name: 'seller_protection')
+    SellerProtectionResponseModel? sellerProtection,
     @JsonKey(name: 'final_capture') bool? finalCapture,
     @JsonKey(name: 'disbursement_mode') String? disbursementMode,
-    @JsonKey(name: 'seller_receivable_breakdown') SellerReceivableBreakdownResponseModel? sellerReceivableBreakdown,
+    @JsonKey(name: 'seller_receivable_breakdown')
+    SellerReceivableBreakdownResponseModel? sellerReceivableBreakdown,
     @JsonKey(name: 'create_time') String? createTime,
     @JsonKey(name: 'update_time') String? updateTime,
     List<LinkResponseModel>? links,
   }) = _CaptureResponseModel;
 
-  factory CaptureResponseModel.fromJson(Map<String, dynamic> json) => _$CaptureResponseModelFromJson(json);
+  factory CaptureResponseModel.fromJson(Map<String, dynamic> json) =>
+      _$CaptureResponseModelFromJson(json);
 }
 
 @freezed
-abstract class SellerProtectionResponseModel with _$SellerProtectionResponseModel {
+abstract class SellerProtectionResponseModel
+    with _$SellerProtectionResponseModel {
   const factory SellerProtectionResponseModel({
     String? status,
     @JsonKey(name: 'dispute_categories') List<String>? disputeCategories,
@@ -76,15 +87,17 @@ abstract class SellerProtectionResponseModel with _$SellerProtectionResponseMode
 }
 
 @freezed
-abstract class SellerReceivableBreakdownResponseModel with _$SellerReceivableBreakdownResponseModel {
+abstract class SellerReceivableBreakdownResponseModel
+    with _$SellerReceivableBreakdownResponseModel {
   const factory SellerReceivableBreakdownResponseModel({
     @JsonKey(name: 'gross_amount') AmountResponseModel? grossAmount,
     @JsonKey(name: 'paypal_fee') AmountResponseModel? paypalFee,
     @JsonKey(name: 'net_amount') AmountResponseModel? netAmount,
   }) = _SellerReceivableBreakdownResponseModel;
 
-  factory SellerReceivableBreakdownResponseModel.fromJson(Map<String, dynamic> json) =>
-      _$SellerReceivableBreakdownResponseModelFromJson(json);
+  factory SellerReceivableBreakdownResponseModel.fromJson(
+    Map<String, dynamic> json,
+  ) => _$SellerReceivableBreakdownResponseModelFromJson(json);
 }
 
 @freezed
@@ -95,13 +108,17 @@ abstract class PayerResponseModel with _$PayerResponseModel {
     @JsonKey(name: 'payer_id') String? payerId,
   }) = _PayerResponseModel;
 
-  factory PayerResponseModel.fromJson(Map<String, dynamic> json) => _$PayerResponseModelFromJson(json);
+  factory PayerResponseModel.fromJson(Map<String, dynamic> json) =>
+      _$PayerResponseModelFromJson(json);
 }
 
 @freezed
 abstract class NameResponseModel with _$NameResponseModel {
-  const factory NameResponseModel({@JsonKey(name: 'given_name') String? givenName, String? surname}) =
-      _NameResponseModel;
+  const factory NameResponseModel({
+    @JsonKey(name: 'given_name') String? givenName,
+    String? surname,
+  }) = _NameResponseModel;
 
-  factory NameResponseModel.fromJson(Map<String, dynamic> json) => _$NameResponseModelFromJson(json);
+  factory NameResponseModel.fromJson(Map<String, dynamic> json) =>
+      _$NameResponseModelFromJson(json);
 }

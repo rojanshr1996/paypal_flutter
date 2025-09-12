@@ -63,7 +63,10 @@ class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
   @override
   void initState() {
     super.initState();
-    _config = PaypalConfig(clientId: widget.clientId, clientSecret: widget.clientSecret);
+    _config = PaypalConfig(
+      clientId: widget.clientId,
+      clientSecret: widget.clientSecret,
+    );
     _ordersService = PaypalOrdersService(Dio(), _config);
 
     _initializeCheckout();
@@ -103,7 +106,12 @@ class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
       if (e is DioException) {
         widget.onError(DioExceptionHandler.handleError(e));
       } else {
-        widget.onError(PayPalPaymentException('Payment initialization failed', originalError: e));
+        widget.onError(
+          PayPalPaymentException(
+            'Payment initialization failed',
+            originalError: e,
+          ),
+        );
       }
     }
   }
@@ -113,7 +121,10 @@ class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('PayPal Checkout'),
-        leading: IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: ValueListenableBuilder<bool>(
         valueListenable: isLoadingNotifier,
@@ -122,7 +133,11 @@ class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
             return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [CircularProgressIndicator(), SizedBox(height: 16), Text('Loading PayPal...')],
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Loading PayPal...'),
+                ],
               ),
             );
           }
@@ -149,7 +164,11 @@ class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
                       return;
                     }
 
-                    widget.onError(PayPalPaymentException('WebView error: ${error.description}'));
+                    widget.onError(
+                      PayPalPaymentException(
+                        'WebView error: ${error.description}',
+                      ),
+                    );
                   },
                 );
               }
@@ -197,12 +216,19 @@ class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
           if (e is DioException) {
             widget.onError(DioExceptionHandler.handleError(e));
           } else {
-            widget.onError(PayPalPaymentException('Payment capture failed', originalError: e));
+            widget.onError(
+              PayPalPaymentException(
+                'Payment capture failed',
+                originalError: e,
+              ),
+            );
           }
         }
       } else {
         // If no capture is needed, still return success
-        widget.onSuccess(PaypalPaymentSuccessModel(token: token, payerId: payerId));
+        widget.onSuccess(
+          PaypalPaymentSuccessModel(token: token, payerId: payerId),
+        );
       }
 
       if (mounted) Navigator.of(context).pop();

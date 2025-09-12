@@ -135,7 +135,8 @@ class _PayPalExamplePageState extends State<PayPalExamplePage> {
                               '${orderDetails.purchaseUnits?.first.amount?.currencyCode}',
                             ),
                             if (orderDetails.payer?.emailAddress != null)
-                              Text('Payer: ${orderDetails.payer!.emailAddress}'),
+                              Text(
+                                  'Payer: ${orderDetails.payer!.emailAddress}'),
                           ],
                         ),
                       ),
@@ -191,7 +192,8 @@ class _PayPalExamplePageState extends State<PayPalExamplePage> {
     BlocProvider.of<OrderDetailsCubit>(context).getOrderDetails(orderId);
   }
 
-  void _showPaymentSuccessDialog(BuildContext context, PaypalPaymentSuccessModel result) {
+  void _showPaymentSuccessDialog(
+      BuildContext context, PaypalPaymentSuccessModel result) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       showDialog(
         context: context,

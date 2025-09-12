@@ -66,7 +66,10 @@ class PaypalOrdersService {
   /// [paypalRequestId] ensures idempotency of capture requests.
   ///
   /// Returns an [OrderCaptureResponseModel] containing payment details.
-  Future<OrderCaptureResponseModel> captureOrder({required String orderId, required String paypalRequestId}) async {
+  Future<OrderCaptureResponseModel> captureOrder({
+    required String orderId,
+    required String paypalRequestId,
+  }) async {
     try {
       final authResponse = await config.getAccessToken();
       final response = await _dio.post(
@@ -94,7 +97,10 @@ class PaypalOrdersService {
   /// [paypalRequestId] ensures idempotency of retrieval requests.
   ///
   /// Returns an [OrderDetailsResponseModel] with order, payer, and transaction details.
-  Future<OrderDetailsResponseModel> getOrderDetails({required String orderId, required String paypalRequestId}) async {
+  Future<OrderDetailsResponseModel> getOrderDetails({
+    required String orderId,
+    required String paypalRequestId,
+  }) async {
     try {
       final authResponse = await config.getAccessToken();
       final response = await _dio.get(

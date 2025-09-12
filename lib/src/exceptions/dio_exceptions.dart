@@ -23,7 +23,10 @@ class DioExceptionHandler {
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
         // Timeout errors while communicating with PayPal
-        return PayPalNetworkException('Connection timed out while communicating with PayPal', originalError: e);
+        return PayPalNetworkException(
+          'Connection timed out while communicating with PayPal',
+          originalError: e,
+        );
 
       case DioExceptionType.badResponse:
         // Errors returned from PayPal API (HTTP status code)
@@ -31,26 +34,40 @@ class DioExceptionHandler {
         final responseData = e.response?.data;
 
         if (statusCode == 401) {
-          return PayPalAuthenticationException('Invalid or expired PayPal token');
+          return PayPalAuthenticationException(
+            'Invalid or expired PayPal token',
+          );
         } else if (statusCode == 400 || statusCode == 422) {
           return PayPalPaymentException(
             'Invalid PayPal request: ${responseData?['message'] ?? 'Bad Request'}',
             originalError: e,
           );
         } else if (statusCode == 404) {
-          return PayPalPaymentException('PayPal resource not found', originalError: e);
+          return PayPalPaymentException(
+            'PayPal resource not found',
+            originalError: e,
+          );
         } else {
-          return PayPalPaymentException('Unexpected PayPal error (status: $statusCode)', originalError: e);
+          return PayPalPaymentException(
+            'Unexpected PayPal error (status: $statusCode)',
+            originalError: e,
+          );
         }
 
       case DioExceptionType.cancel:
         // Request was explicitly cancelled
-        return PayPalPaymentException('PayPal request was cancelled', originalError: e);
+        return PayPalPaymentException(
+          'PayPal request was cancelled',
+          originalError: e,
+        );
 
       case DioExceptionType.unknown:
       default:
         // Catch-all for any other unknown Dio errors
-        return PayPalPaymentException('Unexpected error occurred while communicating with PayPal', originalError: e);
+        return PayPalPaymentException(
+          'Unexpected error occurred while communicating with PayPal',
+          originalError: e,
+        );
     }
   }
 }

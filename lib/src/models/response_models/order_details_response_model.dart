@@ -11,12 +11,14 @@ abstract class OrderDetailsResponseModel with _$OrderDetailsResponseModel {
     required String intent,
     required String status,
     @JsonKey(name: 'payment_source') PaymentSourceResponseModel? paymentSource,
-    @JsonKey(name: 'purchase_units') List<PurchaseUnitResponseModel>? purchaseUnits,
+    @JsonKey(name: 'purchase_units')
+    List<PurchaseUnitResponseModel>? purchaseUnits,
     PayerResponseModel? payer,
     @JsonKey(name: 'create_time') String? createTime,
     @JsonKey(name: 'update_time') String? updateTime,
     List<LinkResponseModel>? links,
   }) = _OrderDetailsResponseModel;
 
-  factory OrderDetailsResponseModel.fromJson(Map<String, dynamic> json) => _$OrderDetailsResponseModelFromJson(json);
+  factory OrderDetailsResponseModel.fromJson(Map<String, dynamic> json) =>
+      _$OrderDetailsResponseModelFromJson(json);
 }

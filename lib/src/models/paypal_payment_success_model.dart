@@ -13,5 +13,6 @@ abstract class PaypalPaymentSuccessModel with _$PaypalPaymentSuccessModel {
     OrderCaptureResponseModel? captureResponse,
   }) = _PaypalPaymentSuccessModel;
 
-  factory PaypalPaymentSuccessModel.fromJson(Map<String, dynamic> json) => _$PaypalPaymentSuccessModelFromJson(json);
+  factory PaypalPaymentSuccessModel.fromJson(Map<String, dynamic> json) =>
+      _$PaypalPaymentSuccessModelFromJson(json);
 }

@@ -14,5 +14,6 @@ abstract class PaypalAuthResponseModel with _$PaypalAuthResponseModel {
     @Default('') String nonce,
   }) = _PaypalAuthResponseModel;
 
-  factory PaypalAuthResponseModel.fromJson(Map<String, dynamic> json) => _$PaypalAuthResponseModelFromJson(json);
+  factory PaypalAuthResponseModel.fromJson(Map<String, dynamic> json) =>
+      _$PaypalAuthResponseModelFromJson(json);
 }

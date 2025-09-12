@@ -7,25 +7,31 @@ part 'create_order_request_model.g.dart';
 abstract class CreateOrderRequestModel with _$CreateOrderRequestModel {
   const factory CreateOrderRequestModel({
     required String intent,
-    @JsonKey(name: 'payment_source') required PaymentSourceRequestModel paymentSource,
-    @JsonKey(name: 'purchase_units') required List<PurchaseUnitRequestModel> purchaseUnits,
+    @JsonKey(name: 'payment_source')
+    required PaymentSourceRequestModel paymentSource,
+    @JsonKey(name: 'purchase_units')
+    required List<PurchaseUnitRequestModel> purchaseUnits,
   }) = _CreateOrderRequestModel;
 }
 
 @Freezed(toJson: true, fromJson: false)
 abstract class PaymentSourceRequestModel with _$PaymentSourceRequestModel {
-  const factory PaymentSourceRequestModel({required PaypalRequestModel paypal}) = _PaymentSourceRequestModel;
+  const factory PaymentSourceRequestModel({
+    required PaypalRequestModel paypal,
+  }) = _PaymentSourceRequestModel;
 }
 
 @Freezed(toJson: true, fromJson: false)
 abstract class PaypalRequestModel with _$PaypalRequestModel {
   const factory PaypalRequestModel({
-    @JsonKey(name: 'experience_context') required ExperienceContextRequestModel experienceContext,
+    @JsonKey(name: 'experience_context')
+    required ExperienceContextRequestModel experienceContext,
   }) = _PaypalRequestModel;
 }
 
 @Freezed(toJson: true, fromJson: false)
-abstract class ExperienceContextRequestModel with _$ExperienceContextRequestModel {
+abstract class ExperienceContextRequestModel
+    with _$ExperienceContextRequestModel {
   const factory ExperienceContextRequestModel({
     @JsonKey(name: 'payment_method_preference') String? paymentMethodPreference,
     @JsonKey(name: 'landing_page') String? landingPage,
@@ -87,5 +93,6 @@ abstract class ItemRequestModel with _$ItemRequestModel {
 
 @Freezed(toJson: true, fromJson: false)
 abstract class UpcRequestModel with _$UpcRequestModel {
-  const factory UpcRequestModel({String? type, String? code}) = _UpcRequestModel;
+  const factory UpcRequestModel({String? type, String? code}) =
+      _UpcRequestModel;
 }

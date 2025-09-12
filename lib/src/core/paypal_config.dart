@@ -74,7 +74,9 @@ class PaypalConfig {
 
       return authData;
     } on DioException catch (e) {
-      log('==> ERROR fetching PayPal access token: ${e.response?.data ?? e.message}');
+      log(
+        '==> ERROR fetching PayPal access token: ${e.response?.data ?? e.message}',
+      );
       throw DioExceptionHandler.handleError(e);
     }
   }

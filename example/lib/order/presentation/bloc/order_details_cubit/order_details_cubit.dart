@@ -6,7 +6,8 @@ import 'package:paypal_flutter_example/order/presentation/bloc/order_details_cub
 class OrderDetailsCubit extends Cubit<OrderDetailsState> {
   final OrderRepository orderRepository;
 
-  OrderDetailsCubit({required this.orderRepository}) : super(const OrderDetailsState.initial());
+  OrderDetailsCubit({required this.orderRepository})
+      : super(const OrderDetailsState.initial());
 
   Future<void> getOrderDetails(String orderId) async {
     try {
@@ -18,7 +19,8 @@ class OrderDetailsCubit extends Cubit<OrderDetailsState> {
       if (e is PayPalException) {
         emit(OrderDetailsState.error(message: e.message));
       } else {
-        emit(const OrderDetailsState.error(message: 'Request Failed. Please try again.'));
+        emit(const OrderDetailsState.error(
+            message: 'Request Failed. Please try again.'));
       }
     }
   }

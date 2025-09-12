@@ -26,16 +26,18 @@ Future<void> initServiceLocator() async {
   );
 
   // PayPal Orders Service
-  getIt.registerLazySingleton<PaypalOrdersService>(() => PaypalOrdersService(getIt<Dio>(), config));
+  getIt.registerLazySingleton<PaypalOrdersService>(
+      () => PaypalOrdersService(getIt<Dio>(), config));
 
   // Remote Data Source
-  getIt.registerLazySingleton<OrderRemoteDataSource>(
-      () => OrderRemoteDataSourceImpl(ordersService: getIt<PaypalOrdersService>()));
+  getIt.registerLazySingleton<OrderRemoteDataSource>(() =>
+      OrderRemoteDataSourceImpl(ordersService: getIt<PaypalOrdersService>()));
 
   // Repository
-  getIt.registerLazySingleton<OrderRepository>(
-      () => OrderRepositoryImpl(orderRemoteDataSource: getIt<OrderRemoteDataSource>()));
+  getIt.registerLazySingleton<OrderRepository>(() => OrderRepositoryImpl(
+      orderRemoteDataSource: getIt<OrderRemoteDataSource>()));
 
   // Cubit
-  getIt.registerFactory<OrderDetailsCubit>(() => OrderDetailsCubit(orderRepository: getIt<OrderRepository>()));
+  getIt.registerFactory<OrderDetailsCubit>(
+      () => OrderDetailsCubit(orderRepository: getIt<OrderRepository>()));
 }
