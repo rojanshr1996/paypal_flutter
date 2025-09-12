@@ -82,7 +82,7 @@ class _PaypalCheckoutPageState extends State<PaypalCheckoutPage> {
     try {
       final orderResponse = await _ordersService.createOrder(
         request: widget.orderRequestData,
-        paypalRequestId: DateTime.now().millisecondsSinceEpoch.toString(),
+        paypalRequestId: DateTime.now().toString(),
       );
 
       // Extract approval link ("approve" or "payer-action")

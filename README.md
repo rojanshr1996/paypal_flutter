@@ -144,7 +144,7 @@ PayPalButtonWidget(
 // Create order
 final orderResponse = await ordersService.createOrder(
   request: orderRequest,
-  paypalRequestId: DateTime.now().millisecondsSinceEpoch.toString(),
+  paypalRequestId: DateTime.now().toString(),
 );
 
 // Capture order
