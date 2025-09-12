@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -149,14 +151,16 @@ class _PayPalExamplePageState extends State<PayPalExamplePage> {
     );
   }
 
-  void _onPaymentSuccess(Map<String, dynamic> result) {
-    _fetchOrderDetails(result['orderId']);
+  void _onPaymentSuccess(PaypalPaymentSuccessModel result) {
+    _fetchOrderDetails(result.orderId);
     _showPaymentSuccessDialog(context, result);
   }
 
-  void _onPaymentError(dynamic error) {
+  void _onPaymentError(PayPalException error) {
+    log("ERROR: $error");
+    error.message;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Payment failed: $error')),
+      SnackBar(content: Text(error.message)),
     );
   }
 
@@ -177,7 +181,7 @@ class _PayPalExamplePageState extends State<PayPalExamplePage> {
     }
   }
 
-  void _showPaymentSuccessDialog(BuildContext context, Map<String, dynamic> result) {
+  void _showPaymentSuccessDialog(BuildContext context, PaypalPaymentSuccessModel result) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       showDialog(
         context: context,
@@ -192,9 +196,9 @@ class _PayPalExamplePageState extends State<PayPalExamplePage> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              Text('Token: ${result['token'] ?? 'N/A'}'),
+              Text('Token: ${result.token ?? ''}'),
               const SizedBox(height: 8),
-              Text('Order ID: ${result['orderId'] ?? 'N/A'}'),
+              Text('Order ID: ${result.orderId ?? ''}'),
             ],
           ),
           actions: [
