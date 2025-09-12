@@ -1,39 +1,221 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# PayPal Flutter
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages).
-
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages).
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+A Flutter package that provides seamless integration with PayPal payment gateway, enabling secure payment processing in Flutter applications.
 
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+- **Complete PayPal Integration**: Full support for PayPal Orders API v2
+- **Environment Support**: Both sandbox and production environments
+- **Order Management**: Create, capture, and retrieve order details
+- **WebView Checkout**: Built-in checkout page with WebView integration
+- **Type Safety**: Strongly typed models with Freezed and JSON serialization
+- **Error Handling**: Comprehensive error handling with specific PayPal exceptions
+- **Success Model**: Structured success response with PaypalPaymentSuccessModel
+- **Customizable UI**: Pre-built PayPal button widget
 
-## Getting started
+## Package Structure
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+```
+lib/
+├── src/
+│   ├── core/
+│   │   └── paypal_config.dart                    # Configuration and authentication
+│   ├── exceptions/
+│   │   ├── dio_exceptions.dart                   # HTTP error handling
+│   │   └── paypal_exceptions.dart                # PayPal-specific exceptions
+│   ├── models/
+│   │   ├── request_models/
+│   │   │   ├── create_order_request_model.dart   # Order creation request
+│   │   │   ├── create_order_request_model.freezed.dart
+│   │   │   └── create_order_request_model.g.dart
+│   │   ├── response_models/
+│   │   │   ├── create_order_response_model.dart  # Order creation response
+│   │   │   ├── order_capture_response_model.dart # Order capture response
+│   │   │   ├── order_details_response_model.dart # Order details response
+│   │   │   ├── paypal_auth_response_model.dart   # Authentication response
+│   │   │   └── *.freezed.dart, *.g.dart         # Generated files
+│   │   ├── paypal_payment_success_model.dart     # Success response model
+│   │   ├── paypal_payment_success_model.freezed.dart
+│   │   └── paypal_payment_success_model.g.dart
+│   ├── services/
+│   │   └── paypal_orders_service.dart            # Orders API service
+│   ├── ui/
+│   │   ├── widgets/
+│   │   │   └── paypal_button_widget.dart         # PayPal button widget
+│   │   └── paypal_checkout_page.dart             # Checkout page with WebView
+│   └── utils/
+│       ├── constants.dart                        # API endpoints
+│       └── enums.dart                            # Environment enums
+└── paypal_flutter.dart                          # Main export file
+```
+
+## Getting Started
+
+### Installation
+
+Add this to your package's `pubspec.yaml` file:
+
+```yaml
+dependencies:
+  paypal_flutter:
+    path: ../
+```
+
+### Prerequisites
+
+1. PayPal Developer Account
+2. Client ID and Client Secret from PayPal Developer Dashboard
 
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
+### Basic Setup
 
 ```dart
-const like = 'sample';
+import 'package:paypal_flutter/paypal_flutter.dart';
+
+// Configure PayPal
+final config = PaypalConfig(
+  clientId: 'your_client_id',
+  clientSecret: 'your_client_secret',
+  environment: PaypalEnvironment.sandbox, // or PaypalEnvironment.production
+);
+
+// Initialize service
+final ordersService = PaypalOrdersService(Dio(), config);
 ```
 
-## Additional information
+### Create and Process Payment
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+```dart
+// Create order request
+const orderRequest = CreateOrderRequestModel(
+  intent: 'CAPTURE',
+  purchaseUnits: [
+    PurchaseUnitRequestModel(
+      amount: AmountRequestModel(
+        currencyCode: 'USD',
+        value: '10.00',
+      ),
+    ),
+  ],
+  paymentSource: PaymentSourceRequestModel(
+    paypal: PaypalRequestModel(
+      experienceContext: ExperienceContextRequestModel(
+        returnUrl: 'https://example.com/success',
+        cancelUrl: 'https://example.com/cancel',
+      ),
+    ),
+  ),
+);
+
+// Open checkout page
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => PaypalCheckoutPage(
+      clientId: 'your_client_id',
+      clientSecret: 'your_client_secret',
+      environment: PaypalEnvironment.sandbox,
+      orderRequestData: orderRequest,
+      onSuccess: (PaypalPaymentSuccessModel result) {
+        print('Payment successful: ${result.orderId}');
+      },
+      onError: (PayPalException error) {
+        print('Payment failed: ${error.message}');
+      },
+      onLoading: () {
+        print('Loading...');
+      },
+    ),
+  ),
+);
+```
+
+### Using PayPal Button Widget
+
+```dart
+PayPalButtonWidget(
+  clientId: 'your_client_id',
+  clientSecret: 'your_client_secret',
+  environment: PaypalEnvironment.sandbox,
+  orderRequestData: orderRequest,
+  onSuccess: (PaypalPaymentSuccessModel result) {
+    print('Success: ${result.orderId}');
+  },
+  onError: (PayPalException error) {
+    print('Error: ${error.message}');
+  },
+  onLoading: () => print('Loading...'),
+)
+```
+
+### Manual Order Operations
+
+```dart
+// Create order
+final orderResponse = await ordersService.createOrder(
+  request: orderRequest,
+  paypalRequestId: DateTime.now().toString(),
+);
+
+// Capture order
+final captureResponse = await ordersService.captureOrder(
+  orderId: orderResponse.id!,
+  paypalRequestId: DateTime.now().toString(),
+);
+
+// Get order details
+final orderDetails = await ordersService.getOrderDetails(
+  orderId: orderResponse.id!,
+  paypalRequestId: DateTime.now().toString(),
+);
+```
+
+## Core Components
+
+- **PaypalConfig**: Handles authentication and environment configuration
+- **PaypalOrdersService**: Manages order creation, capture, and retrieval
+- **PaypalCheckoutPage**: Full-screen checkout with WebView integration
+- **PayPalButtonWidget**: Customizable PayPal button component
+- **PaypalPaymentSuccessModel**: Success response with orderId, token, payerId, and captureResponse
+- **Request Models**: CreateOrderRequestModel with Freezed serialization
+- **Response Models**: CreateOrderResponseModel, OrderCaptureResponseModel, OrderDetailsResponseModel, PaypalAuthResponseModel
+- **PayPal Exceptions**: Comprehensive error handling with specific exception types
+- **PaypalEnvironment**: Enum for sandbox and production environments
+
+## Error Handling
+
+The package includes comprehensive error handling with specific PayPal exceptions:
+
+```dart
+// In payment callbacks
+void _onPaymentError(PayPalException error) {
+  switch (error.runtimeType) {
+    case PayPalAuthenticationException:
+      print('Authentication failed: ${error.message}');
+      break;
+    case PayPalNetworkException:
+      print('Network error: ${error.message}');
+      break;
+    case PayPalPaymentException:
+      print('Payment error: ${error.message}');
+      break;
+    default:
+      print('Error: ${error.message}');
+  }
+}
+
+// In service calls
+try {
+  final result = await ordersService.createOrder(...);
+} on DioException catch (e) {
+  final paypalError = DioExceptionHandler.handleError(e);
+  // Handle converted PayPal exception
+} on PayPalException catch (e) {
+  // Handle PayPal-specific errors
+}
+```
+
+## License
+
+MIT
