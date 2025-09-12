@@ -117,23 +117,14 @@ The app uses [flutter\_dotenv](https://pub.dev/packages/flutter_dotenv) to load 
 
 ```mermaid
 graph TD
-    A[App Initialization] --> B[Service Locator Setup]
-    B --> C[BlocProvider Setup]
-    C --> D[Start Payment]
-    D --> E[Create Order via PayPal API]
-    E --> F[Get Approval URL]
-    F --> G[Display WebView for User Approval]
-    G -->|User Approves| H[Capture Order via PayPal API]
-    H --> I[Return Success Result]
-    G -->|User Cancels| J[Return Error Result]
-    I --> K[OrderDetailsCubit.getOrderDetails()]
-    K --> L[Cubit Emits Loading State]
-    L --> M[Fetch Order Details API]
-    M -->|Success| N[Cubit Emits Success State]
-    M -->|Error| O[Cubit Emits Error State]
-    N --> P[BlocBuilder Updates UI]
-    O --> P
-    J --> Q[Show Error SnackBar]
+    A[Start Payment] --> B[Create Order via PayPal API]
+    B --> C[Get Approval URL]
+    C --> D[Display WebView for User Approval]
+    D -->|User Approves| E[Capture Order via PayPal API]
+    E --> F[Return Success Result]
+    D -->|User Cancels| G[Return Error Result]
+    F --> H[Fetch Order Details if needed]
+    H --> I[Display Order Details in UI]
 ```
 
 This diagram shows the complete flow including clean architecture setup, state management with Cubit, and UI updates through BlocBuilder.
